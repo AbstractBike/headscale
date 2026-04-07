@@ -1,0 +1,45 @@
+groups:
+  - name: headscale
+    rules:
+      - alert: HeadscaleDown
+        expr: up{job="headscale"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: headscale
+        annotations:
+          summary: "headscale is down"
+          description: "The headscale service has been unreachable for 5 minutes."
+
+      - alert: HeadscaleHighErrorRate
+        expr: |
+          rate(http_requests_total{job="headscale",status=~"5.."}[5m])
+          / rate(http_requests_total{job="headscale"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: headscale
+        annotations:
+          summary: "headscale error rate above 5%"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes."
+
+      - alert: HeadscaleHighLatency
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket{job="headscale"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: headscale
+        annotations:
+          summary: "headscale p99 latency above 1s"
+          description: "p99 latency is {{ $value | humanizeDuration }}."
+
+      - alert: HeadscaleNoNodes
+        expr: headscale_nodes_total == 0
+        for: 10m
+        labels:
+          severity: warning
+          service: headscale
+        annotations:
+          summary: "headscale has no registered nodes"
+          description: "No nodes have been registered for 10 minutes — coordination server may be misconfigured."

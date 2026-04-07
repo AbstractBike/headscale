@@ -1,0 +1,14 @@
+# Prometheus scrape config for headscale.
+# Consumed by otelcol-contrib's prometheus receiver.
+# headscale exposes metrics at metrics_listen_addr (default 127.0.0.1:9090).
+scrape_configs:
+  - job_name: headscale
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "127.0.0.1:9090"
+        labels:
+          service: headscale
+          host: "{{ inventory_hostname }}"

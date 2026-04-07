@@ -1,0 +1,25 @@
+# Vector log pipeline for headscale.
+# headscale logs via journald — picked up automatically by otelcol's journald receiver.
+# Only add entries here for file-based log sources.
+
+sources:
+  # Uncomment for file-based logs:
+  # headscale_logs:
+  #   type: file
+  #   include:
+  #     - /var/lib/headscale/logs/*.log
+  #   read_from: beginning
+
+transforms:
+  headscale_parse:
+    type: remap
+    inputs: []  # add sources above
+    source: |
+      .service = "headscale"
+      # headscale emits structured JSON logs — parse them:
+      # . = parse_json!(.message)
+      .host = get_hostname!()
+
+sinks:
+  # headscale logs go to VictoriaLogs via the shared otelcol pipeline.
+  # No explicit sink needed if using journald receiver.
